@@ -37,9 +37,40 @@ export default function HomeScreen() {
         return `$${amount.toFixed(2)}`;
     };
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 18) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
+    const calculateTotal = () => {
+        return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
+                {/* Header Section */}
+                <View style={styles.header}>
+                    <Text style={styles.greeting}>{getGreeting()} 👋</Text>
+                    <Text style={styles.subtitle}>Track your expenses with ease</Text>
+
+                    {expenses.length > 0 && (
+                        <View style={styles.statsCard}>
+                            <View style={styles.statItem}>
+                                <Text style={styles.statLabel}>Recent Total</Text>
+                                <Text style={styles.statValue}>{formatAmount(calculateTotal())}</Text>
+                            </View>
+                            <View style={styles.statDivider} />
+                            <View style={styles.statItem}>
+                                <Text style={styles.statLabel}>Transactions</Text>
+                                <Text style={styles.statValue}>{expenses.length}</Text>
+                            </View>
+                        </View>
+                    )}
+                </View>
+
                 {/* Add Expense Button */}
                 <TouchableOpacity
                     style={styles.addButton}
@@ -51,7 +82,7 @@ export default function HomeScreen() {
 
                 {/* Recent Expenses Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Recent Expenses</Text>
+                    <Text style={styles.sectionTitle}>Recent Activity</Text>
 
                     {expenses.length === 0 ? (
                         <View style={styles.emptyState}>
@@ -62,6 +93,7 @@ export default function HomeScreen() {
                         <FlatList
                             data={expenses}
                             keyExtractor={(item) => item.id}
+                            showsVerticalScrollIndicator={false}
                             refreshControl={
                                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                             }
@@ -101,17 +133,72 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f8fafc',
     },
     content: {
         flex: 1,
-        padding: 16,
+    },
+    header: {
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        marginHorizontal: 10,
+        paddingBottom: 18,
+        backgroundColor: '#6366f1',
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        shadowColor: '#6366f1',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    greeting: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#ffffff',
+        marginBottom: 3,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#c7d2fe',
+        marginBottom: 16,
+    },
+    statsCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: 16,
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    statItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    statLabel: {
+        fontSize: 12,
+        color: '#c7d2fe',
+        marginBottom: 6,
+        fontWeight: '600',
+    },
+    statValue: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#ffffff',
+    },
+    statDivider: {
+        width: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        marginHorizontal: 16,
     },
     addButton: {
         backgroundColor: '#6366f1',
         padding: 18,
-        borderRadius: 12,
+        borderRadius: 16,
         alignItems: 'center',
+        marginHorizontal: 20,
+        marginTop: 24,
         marginBottom: 24,
         shadowColor: '#6366f1',
         shadowOffset: { width: 0, height: 4 },
@@ -126,9 +213,10 @@ const styles = StyleSheet.create({
     },
     section: {
         flex: 1,
+        paddingHorizontal: 20,
     },
     sectionTitle: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 16,
         color: '#1f2937',
@@ -136,12 +224,12 @@ const styles = StyleSheet.create({
     expenseCard: {
         backgroundColor: '#fff',
         padding: 16,
-        borderRadius: 12,
+        borderRadius: 16,
         marginBottom: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
         elevation: 3,
     },
     expenseHeader: {
@@ -184,30 +272,37 @@ const styles = StyleSheet.create({
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 60,
+        paddingVertical: 80,
     },
     emptyStateText: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '600',
         color: '#9ca3af',
         marginBottom: 8,
     },
     emptyStateSubtext: {
-        fontSize: 14,
+        fontSize: 15,
         color: '#d1d5db',
     },
     viewAllButton: {
         backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 12,
+        padding: 18,
+        borderRadius: 16,
         alignItems: 'center',
         borderWidth: 2,
         borderColor: '#6366f1',
+        marginHorizontal: 20,
         marginTop: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
     viewAllButtonText: {
         color: '#6366f1',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
     },
 });
