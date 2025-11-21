@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { addExpense } from '../services/storage';
+import { addIncome } from '../services/storage';
+import { INCOME_SOURCES } from '../types/income';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 
-const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Other'];
-
-export default function AddExpenseScreen() {
+export default function AddIncomeScreen() {
     const router = useRouter();
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
-    const [category, setCategory] = useState('Food');
+    const [source, setSource] = useState('Salary');
     const { toast, showToast, hideToast } = useToast();
 
     const handleSubmit = async () => {
@@ -28,16 +27,16 @@ export default function AddExpenseScreen() {
         }
 
         try {
-            await addExpense({
+            await addIncome({
                 amount: amountNum,
                 description,
-                category,
+                source,
                 date: new Date().toISOString(),
             });
-            showToast('Expense added successfully!', 'success');
+            showToast('Income added successfully!', 'success');
             setTimeout(() => router.back(), 1500);
         } catch (error) {
-            showToast('Failed to add expense', 'error');
+            showToast('Failed to add income', 'error');
         }
     };
 
@@ -68,33 +67,33 @@ export default function AddExpenseScreen() {
                         <Text style={styles.label}>Description</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Enter description"
+                            placeholder="e.g., Monthly Salary, Freelance Project"
                             value={description}
                             onChangeText={setDescription}
                         />
                     </View>
 
-                    {/* Category Selection */}
+                    {/* Source Selection */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Category</Text>
-                        <View style={styles.categoryContainer}>
-                            {CATEGORIES.map((cat) => (
+                        <Text style={styles.label}>Source</Text>
+                        <View style={styles.sourceContainer}>
+                            {INCOME_SOURCES.map((src) => (
                                 <TouchableOpacity
-                                    key={cat}
+                                    key={src}
                                     style={[
-                                        styles.categoryButton,
-                                        category === cat && styles.categoryButtonActive,
+                                        styles.sourceButton,
+                                        source === src && styles.sourceButtonActive,
                                     ]}
-                                    onPress={() => setCategory(cat)}
+                                    onPress={() => setSource(src)}
                                     activeOpacity={0.7}
                                 >
                                     <Text
                                         style={[
-                                            styles.categoryButtonText,
-                                            category === cat && styles.categoryButtonTextActive,
+                                            styles.sourceButtonText,
+                                            source === src && styles.sourceButtonTextActive,
                                         ]}
                                     >
-                                        {cat}
+                                        {src}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -107,7 +106,7 @@ export default function AddExpenseScreen() {
                         onPress={handleSubmit}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.submitButtonText}>Add Expense</Text>
+                        <Text style={styles.submitButtonText}>Add Income</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -143,12 +142,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#e5e7eb',
     },
-    categoryContainer: {
+    sourceContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
     },
-    categoryButton: {
+    sourceButton: {
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 20,
@@ -156,25 +155,25 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#e5e7eb',
     },
-    categoryButtonActive: {
-        backgroundColor: '#6366f1',
-        borderColor: '#6366f1',
+    sourceButtonActive: {
+        backgroundColor: '#10b981',
+        borderColor: '#10b981',
     },
-    categoryButtonText: {
+    sourceButtonText: {
         fontSize: 14,
         fontWeight: '600',
         color: '#6b7280',
     },
-    categoryButtonTextActive: {
+    sourceButtonTextActive: {
         color: '#fff',
     },
     submitButton: {
-        backgroundColor: '#ef4444',
+        backgroundColor: '#10b981',
         padding: 18,
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 16,
-        shadowColor: '#ef4444',
+        shadowColor: '#10b981',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
