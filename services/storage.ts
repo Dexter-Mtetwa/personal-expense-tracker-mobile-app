@@ -2,11 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Expense } from '../types/expense';
 import { Income } from '../types/income';
 import { MonthPeriod, createMonthPeriod, isPeriodExpired, isDateInPeriod } from '../types/monthPeriod';
+import { PINData } from '../types/pin';
 
 const STORAGE_KEY = '@expense_tracker_expenses';
 const INCOME_STORAGE_KEY = '@expense_tracker_income';
 const PERIODS_KEY = '@expense_tracker_periods'; // Changed to plural to store array
 const MONTH_PERIOD_KEY = '@expense_tracker_month_period'; // Legacy key kept for safety
+const PIN_STORAGE_KEY = '@expense_tracker_pin';
+const RECOVERY_CODE_KEY = '@expense_tracker_recovery_code';
 
 // ============ EXPENSE FUNCTIONS ============
 
@@ -372,3 +375,157 @@ export const calculateStatsForPeriod = async (periodId: string) => {
         };
     }
 };
+
+// ============ PIN MANAGEMENT FUNCTIONS ============
+
+/**
+ * Generate a random 8-character recovery code
+ */
+const generateRecoveryCode = (): string => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude ambiguous characters
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    // Format as XXXX-XXXX for readability
+    return `${code.slice(0, 4)}-${code.slice(4)}`;
+};
+
+/**
+ * Check if user has completed PIN setup
+ */
+export const hasPINSetup = async (): Promise<boolean> => {
+    try {
+        const pin = await AsyncStorage.getItem(PIN_STORAGE_KEY);
+        return pin !== null;
+    } catch (error) {
+        console.error('Error checking PIN setup:', error);
+        return false;
+    }
+};
+
+/**
+ * Get stored PIN
+ */
+export const getPIN = async (): Promise<string | null> => {
+    try {
+        return await AsyncStorage.getItem(PIN_STORAGE_KEY);
+    } catch (error) {
+        console.error('Error getting PIN:', error);
+        return null;
+    }
+};
+
+/**
+ * Set/Update PIN
+ */
+export const setPIN = async (pin: string): Promise<void> => {
+    try {
+        await AsyncStorage.setItem(PIN_STORAGE_KEY, pin);
+    } catch (error) {
+        console.error('Error setting PIN:', error);
+        throw error;
+    }
+};
+
+/**
+ * Get recovery code
+ */
+export const getRecoveryCode = async (): Promise<string | null> => {
+    try {
+        return await AsyncStorage.getItem(RECOVERY_CODE_KEY);
+    } catch (error) {
+        console.error('Error getting recovery code:', error);
+        return null;
+    }
+};
+
+/**
+ * Set recovery code (or generate if not provided)
+ */
+export const setRecoveryCode = async (code?: string): Promise<string> => {
+    try {
+        const recoveryCode = code || generateRecoveryCode();
+        await AsyncStorage.setItem(RECOVERY_CODE_KEY, recoveryCode);
+        return recoveryCode;
+    } catch (error) {
+        console.error('Error setting recovery code:', error);
+        throw error;
+    }
+};
+
+/**
+ * Setup PIN and recovery code (first-time setup)
+ */
+export const setupPIN = async (pin: string): Promise<string> => {
+    try {
+        await setPIN(pin);
+        const recoveryCode = await setRecoveryCode();
+        return recoveryCode;
+    } catch (error) {
+        console.error('Error setting up PIN:', error);
+        throw error;
+    }
+};
+
+/**
+ * Verify PIN
+ */
+export const verifyPIN = async (pin: string): Promise<boolean> => {
+    try {
+        const storedPIN = await getPIN();
+        return storedPIN === pin;
+    } catch (error) {
+        console.error('Error verifying PIN:', error);
+        return false;
+    }
+};
+
+/**
+ * Verify recovery code
+ */
+export const verifyRecoveryCode = async (code: string): Promise<boolean> => {
+    try {
+        const storedCode = await getRecoveryCode();
+        // Case-insensitive comparison, remove any spaces/dashes
+        const normalizedInput = code.toUpperCase().replace(/[\s-]/g, '');
+        const normalizedStored = storedCode?.toUpperCase().replace(/[\s-]/g, '') || '';
+        return normalizedInput === normalizedStored;
+    } catch (error) {
+        console.error('Error verifying recovery code:', error);
+        return false;
+    }
+};
+
+/**
+ * Reset PIN using recovery code
+ */
+export const resetPINWithRecoveryCode = async (recoveryCode: string, newPIN: string): Promise<boolean> => {
+    try {
+        const isValid = await verifyRecoveryCode(recoveryCode);
+        if (isValid) {
+            await setPIN(newPIN);
+            // Generate new recovery code after reset
+            await setRecoveryCode();
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error resetting PIN:', error);
+        return false;
+    }
+};
+
+/**
+ * Clear all PIN data (use with caution - for complete reset)
+ */
+export const clearPINData = async (): Promise<void> => {
+    try {
+        await AsyncStorage.removeItem(PIN_STORAGE_KEY);
+        await AsyncStorage.removeItem(RECOVERY_CODE_KEY);
+    } catch (error) {
+        console.error('Error clearing PIN data:', error);
+        throw error;
+    }
+};
+
